@@ -123,18 +123,55 @@ argocd admin initial-password -n argocd
 
 Congrats! You have now deployed a basic ArgoCD setup
 
-## App-of-Apps
+## App-of-Apps & bootstrapping
 
 The deployment pattern we'd decided to leverage for this cluster is the app-of-apps
 pattern, which involves declaring an ArgoCD "Application" resource that describes
 manifests for downstream applications, which then get rolled up and managed by Argo
 after bootstrapping.
 
-### Bootstrapping the cluster
+### CRD installation
 
-1. Navigate to the apps directory and copy the "app-of-apps.yaml" manifest
+**NOTE** Make sure any CRDs needed by your applications are pre-installed
+For our cluster, we'll need the Gateway CRD pre-installed to take advantage of the
+Kubernetes Gateway API
 
-## Networking - deploy Istio
+Gateway (Istio)
+```zsh
+kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
+  { kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml; }
+```
+
+### Repository configuration
+
+We'll also be using the [multiple sources for an application](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/)
+pattern with Argo to enable us to use public Helm charts combined with private values files
+stored in a private repository.
+
+To enable Argo to authenticate to our private repository, we simply have to
+1. Go to Settings > Repository Configuration
+2. Fill in the appropriate settings for this repository
+
+### Cluster deployment
+
+Now that we've got our CRDs created and our repository credentials in ArgoCD,
+it's time to deploy our cluster!
+
+1. In Argo, click the "new app" button and then click "edit as YAML"
+2. In the repository, copy the "app-of-apps.yaml" manifest
+3. Paste the manifest into Argo, click save, and click create
+4. Deploy! Congrats! You've successfully deployed a copy of my homelab cluster
+
+The rest of this README will provide an overview of some of the applications deployed
+by our app-of-apps, what they do, and basic concepts/configuration I thought
+would be useful fo reference later on.
+
+## Networking - Istio
 
 Now that we have our CD framework developed using Argo, we can start deploying
 GitOps-enabled applications!
+
+Our first application is [Istio](https://istio.io/latest/docs/ambient/install/helm/#install-the-control-plane) -
+an ambient service mesh that provides networking APIs for Kubernetes resources.
+Charts for Istio are defined in the istio-base, istio-cni, istiod, and istio-ztunnel
+application manifests

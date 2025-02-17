@@ -1,1 +1,3 @@
 profile: ambient
+global:
+  platform: k3s

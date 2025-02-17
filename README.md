@@ -132,7 +132,7 @@ after bootstrapping.
 
 ### Bootstrapping the cluster
 
-1. Navigate to the apps directory and copy the "app-of-apps.yaml"
+1. Navigate to the apps directory and copy the "app-of-apps.yaml" manifest
 
 ## Networking - deploy Istio
 

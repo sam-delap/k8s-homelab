@@ -73,7 +73,10 @@ sudo k3s kubectl config view --raw > /tmp/kubeconfig
 
 # Edit kubeconfig - replace 127.0.0.1 with private IP for use from remote systems
 nvim /tmp/kubeconfig
+```
 
+#### Both machines - SCP file
+```zsh
 # On developer machine - restart SSH server temporarily to allow SCP
 sudo systemctl start sshd.service
 
@@ -82,13 +85,56 @@ scp /tmp/kubeconfig user@host:/tmp/kubeconfig
 
 # Developer machine - stop SSH listener
 sudo systemctl stop sshd.service
+```
 
+#### Developer machine - move config to correct location and validate
+```zsh
 # Move kubeconfig to correct location
 mv /tmp/kubeconfig ~/.kube/config
 
 # Check that kubectl is now properly configured
 kubectl cluster-info
-``
+```
 
+## ArgoCD configuration
 
+For my first CD test here, I'm going to be using ArgoCD as my GitOps tool of choice. 
+To install ArgoCD, follow the instructions [here](https://argo-cd.readthedocs.io/en/stable/getting_started/)
 
+**NOTE** - Make sure you install both the k8s components and the CLI
+
+```zsh
+VERSION=$(curl -L -s https://raw.githubusercontent.com/argoproj/argo-cd/stable/VERSION)
+curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/v$VERSION/argocd-linux-amd64
+sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+rm argocd-linux-amd64
+```
+
+For initial config/testing, I'm going to port-forward the ArgoCD traffic to my
+developer machine
+
+Make sure this command is run in the background, as it will consume a terminal session
+```zsh
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# Get initial admin password to log in as admin
+argocd admin initial-password -n argocd
+```
+
+Congrats! You have now deployed a basic ArgoCD setup
+
+## App-of-Apps
+
+The deployment pattern we'd decided to leverage for this cluster is the app-of-apps
+pattern, which involves declaring an ArgoCD "Application" resource that describes
+manifests for downstream applications, which then get rolled up and managed by Argo
+after bootstrapping.
+
+### Bootstrapping the cluster
+
+1. Navigate to the apps directory and copy the "app-of-apps.yaml"
+
+## Networking - deploy Istio
+
+Now that we have our CD framework developed using Argo, we can start deploying
+GitOps-enabled applications!

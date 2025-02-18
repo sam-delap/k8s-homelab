@@ -175,3 +175,32 @@ Our first application is [Istio](https://istio.io/latest/docs/ambient/install/he
 an ambient service mesh that provides networking APIs for Kubernetes resources.
 Charts for Istio are defined in the istio-base, istio-cni, istiod, and istio-ztunnel
 application manifests
+
+There is a bit of config we have to do in ArgoCD to enable it to work with Istio.
+Since I haven't figured out a good way to manage Argo with itself, this part was applied manually,
+following the instructions in the Argo [documentation](https://argo-cd.readthedocs.io/en/latest/operator-manual/ingress/#istio).
+
+### Generating a self-signed cert for local testing
+
+If you're anything like me, you don't super want to expose your cluster to the
+Internet until you're reasonably sure you've gotten everything secure. This means
+you're doing a lot of either port forwarding or generating self-signed certificates.
+Here's some sample commands that should help with generating those certs for
+your node computer.
+
+#### Creating self-signed cert w/ openssl
+
+Create the cert on developer machine
+```zsh
+openssl req -x509 -out node.crt -keyout localhost.key \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=cluster.local' -extensions EXT -config <( \
+   printf "[dn]\nCN=cluster.local\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:cluster.local\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+```
+
+Create Kubernetes secret from cert
+```
+kubectl create secret tls -n argocd argocd-server-tls --cert=/path/to/node.crt --key=/path/to/localhost.key
+```
+
+Edit /etc/hosts to point cluster.local to node IP

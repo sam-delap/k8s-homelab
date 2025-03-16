@@ -58,7 +58,11 @@ for our k3s node to function correctly.
 ### k3s node - Install software
 
 Follow instructions [here](https://docs.k3s.io/installation/requirements?os=rhel) for basic setup
-Then, follow the quick-start [guide](https://docs.k3s.io/quick-start) to get everything installed
+Then, follow the quick-start [guide](https://docs.k3s.io/quick-start) to get everything installed.
+The k3s command that finally worked for me was:
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik" sh -
+```
 
 ### Developer machine - set up kubectl
 
@@ -121,7 +125,7 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 argocd admin initial-password -n argocd
 ```
 
-Congrats! You have now deployed a basic ArgoCD setup
+Congrats! You have now deployed a basic ArgoCD setup that can be accessed on port 8080
 
 ## App-of-Apps & bootstrapping
 
@@ -176,9 +180,15 @@ an ambient service mesh that provides networking APIs for Kubernetes resources.
 Charts for Istio are defined in the istio-base, istio-cni, istiod, and istio-ztunnel
 application manifests
 
+### A note about Istio and sync waves
+
+For Istio to work correctly, we have to install istio-base, then istiod, then ztunnel. We do this using [sync waves](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/)
+
 There is a bit of config we have to do in ArgoCD to enable it to work with Istio.
 Since I haven't figured out a good way to manage Argo with itself, this part was applied manually,
 following the instructions in the Argo [documentation](https://argo-cd.readthedocs.io/en/latest/operator-manual/ingress/#istio).
+
+The kustomization.yml and patch.yml that worked when applied to my cluster are in the manual-argo-kustomize directory
 
 ### Generating a self-signed cert for local testing
 

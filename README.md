@@ -156,6 +156,17 @@ To enable Argo to authenticate to our private repository, we simply have to
 1. Go to Settings > Repository Configuration
 2. Fill in the appropriate settings for this repository
 
+### Application Health Monitoring
+
+I'm using Argo to bootstrap my entire cluster. As a result, I need to make sure that
+my cluster's core services (networking, mainly) come up before the rest of the cluster.
+To do this, I need to monitor the health of child applications and use SyncWaves
+to enforce a certain deployment order. To configure this, run the following line
+from within the `argo-app-health-check-fix` directory
+```zsh
+kubectl patch cm/argocd-cm --type=merge -n argocd --patch-file argocd-cm-patch.yml
+```
+
 ### Cluster deployment
 
 Now that we've got our CRDs created and our repository credentials in ArgoCD,

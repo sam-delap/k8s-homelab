@@ -67,9 +67,8 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik" sh -
 ### Developer machine - set up kubectl
 
 Download kubectl [here](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management) 
-Then, configure kubectl by doing the following:
 
-#### k3s node - Fetch current kubeconfig
+### k3s node - Fetch current kubeconfig
 
 ```zsh
 # Fetch kubeconfig for current cluster
@@ -100,9 +99,15 @@ mv /tmp/kubeconfig ~/.kube/config
 kubectl cluster-info
 ```
 
+## General Philosophy - Adding apps to a cluster, building automation for apps
+
+For tinkering purposes, it's often easier to follow a tutorial with cleanup, then
+build automation. That is the approach we'll take here.
+
 ## ArgoCD configuration
 
-For my first CD test here, I'm going to be using ArgoCD as my GitOps tool of choice. 
+ArgoCD is the CD tool I've chosen to use for this cluster. There are many
+others you could pick, but all instructions from here on out will assume ArgoCD
 To install ArgoCD, follow the instructions [here](https://argo-cd.readthedocs.io/en/stable/getting_started/)
 
 **NOTE** - Make sure you install both the k8s components and the CLI
@@ -181,15 +186,58 @@ The rest of this README will provide an overview of some of the applications dep
 by our app-of-apps, what they do, and basic concepts/configuration I thought
 would be useful fo reference later on.
 
-## Networking - Istio
+## Istio - A k8s-native service mesh for secure, centralized networking
+
+This section describes core concepts of the Istio ambient mode service mesh that
+I used to develop the working manifests to deploy Istio via ArgoCD
+
+### Istio Ambient mode components
+
+#### Istio-base
+
+The base app. Not much to see here
+
+#### Istiod
+
+The control plane daemonset for Istio
+
+#### Istio CNI
+
+The CNI plugin for Istio. This is an important one, as this will create container
+interfaces for any pods launched in istio-enabled namespaces. There are several
+issues that can happen with this
+
+#### Istio Ztunnel
+
+Rust-based zero-trust tunneling daemonset for transmitting traffic through the mesh
+
+#### Kubernetes Gatetway API
+
+A custom set of resources for defining traffic routes, provided by the k8s project
+
+#### How traffic gets from the frontend to the backend
+
+If you ever want to visualize this for yourself, [Kiali](https://kiali.io/) is a 
+fantastic tool for doing so!
+
+#### Adding applications to the mesh
+
+To add applications to the service mesh, you can either label the namespace or the
+application itself using the `istio.io/dataplane-mode=ambient` label
+
+#### Controlling access between applications - SPIFFE IDs
+
+Istio ambient uses the concept of [SPIFFE](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/) IDs
+to manage workload identities.
 
 Now that we have our CD framework developed using Argo, we can start deploying
 GitOps-enabled applications!
 
 Our first application is [Istio](https://istio.io/latest/docs/ambient/install/helm/#install-the-control-plane) -
 an ambient service mesh that provides networking APIs for Kubernetes resources.
-Charts for Istio are defined in the istio-base, istio-cni, istiod, and istio-ztunnel
+Charts and k3s-compatible values for Istio are defined in the istio-base, istio-cni, istiod, and istio-ztunnel
 application manifests
+
 
 ### A note about Istio and sync waves
 
@@ -224,4 +272,3 @@ Create Kubernetes secret from cert
 kubectl create secret tls -n argocd argocd-server-tls --cert=/path/to/node.crt --key=/path/to/localhost.key
 ```
 
-Edit /etc/hosts to point cluster.local to node IP

@@ -13,7 +13,7 @@ spec:
   source:
     chart: base
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.24.3"
+    targetRevision: "1.25.1"
   syncPolicy:
     automated:
       prune: true
@@ -43,7 +43,7 @@ spec:
   sources:
     - chart: cni
       repoURL: https://istio-release.storage.googleapis.com/charts
-      targetRevision: "1.24.3"
+      targetRevision: "1.25.1"
       helm:
         valueFiles:
           - $values/istio/istio-cni/values.yaml
@@ -72,7 +72,7 @@ spec:
   sources:
     - chart: istiod
       repoURL: https://istio-release.storage.googleapis.com/charts
-      targetRevision: "1.24.3"
+      targetRevision: "1.25.1"
       helm:
         valueFiles:
           - $values/istio/istiod/values.yaml
@@ -106,7 +106,7 @@ spec:
   source:
     chart: ztunnel
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.24.3"
+    targetRevision: "1.25.1"
   syncPolicy:
     automated:
       prune: true
